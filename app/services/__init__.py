@@ -1,0 +1,1 @@
+from .predict_price import predict_property_price

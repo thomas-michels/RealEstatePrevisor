@@ -1,1 +1,1 @@
-from .property import SellingProperty
+from .property import SellingProperty, PredictedProperty

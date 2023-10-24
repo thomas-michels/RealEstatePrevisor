@@ -6,3 +6,4 @@ st.write("""
          Aqui você pode visualizar os imóveis a venda em Blumenau e
          precificar o seu imóvel.
          """)
+         
