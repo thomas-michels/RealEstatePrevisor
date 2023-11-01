@@ -1,57 +1,89 @@
 import folium
 import streamlit as st
 from streamlit_folium import st_folium
-import requests
-from app.configs import get_environment
-
-_env = get_environment()
+from app.services import PropertySearch
 
 
-def get_data():
-    url = f"{_env.PROPERTIES_API_URL}/properties"
-    params = {"page_size": 1000, "offset": 0}
+st.set_page_config(layout="wide")
 
-    data = requests.get(url=url, params=params)
+def get_data(
+        page_size: int=500,
+        offset: int=0,
+        rooms: int=0,
+        bathrooms: int=0,
+        parking_space: int=0,
+        size: int=0,
+        zip_code: str=""):
 
-    data.raise_for_status()
-    st.session_state["data"] = data.json()["data"]
+    property_search = PropertySearch()
+
+    st.session_state["data"] = property_search.find_similar_properties(
+        page_size=page_size,
+        offset=offset,
+        rooms=rooms,
+        bathrooms=bathrooms,
+        parking_space=parking_space,
+        size=size,
+        zip_code=zip_code
+    )
     
     all_properties = {}
 
-    for property in data.json()["data"]:
+    for property in st.session_state["data"]:
         all_properties[f'{float(property["latitude"])}-{float(property["longitude"])}'] = property
     
     st.session_state["properties"] = all_properties
 
+def apply_filter():
+    get_data(
+        rooms=rooms,
+        bathrooms=bathrooms,
+        parking_space=parking_space,
+        size=size,
+        zip_code=zip_code
+    )
+
+def load_map():
+    map = folium.Map(location=[-26.878599, -49.079493], zoom_start=12)
+
+    groups = {}
+
+    properties = st.session_state["data"]
+
+    for property in properties:
+        neighbor = property["neighborhood_name"]
+        if neighbor not in groups:
+            groups[neighbor] = folium.FeatureGroup(neighbor).add_to(map)
+
+        popup = folium.Popup(
+            f"""
+                <a href="{property["property_url"]}" target="_blank">{property["title"]}</a><br>
+                <br>
+                {property["description"]}<br>
+                <br>
+                """,
+            max_width=250,
+        )
+        
+        folium.Marker([property["latitude"], property["longitude"]], tooltip=property["title"]).add_to(groups[neighbor])
+
+    folium.LayerControl().add_to(map)
+    return map
+
 if "data" not in st.session_state:
     get_data()
+    load_map()
 
-map = folium.Map(location=[-26.878599, -49.079493], zoom_start=12)
+with st.expander(label="Filtros") as filter:
+    rooms = st.number_input(label="Quantidade de quartos", min_value=0)
+    bathrooms = st.number_input(label="Quantidade de banheiros", min_value=0)
+    parking_space = st.number_input(label="Quantidade de garagens", min_value=0)
+    size = st.number_input(label="Tamanho em m²", min_value=0)
+    zip_code = st.number_input(label="CEP")
 
-groups = {}
+btn_search = st.button(label="Filtrar", on_click=apply_filter)
 
-properties = st.session_state["data"]
-
-for property in properties:
-    neighbor = property["neighborhood_name"]
-    if neighbor not in groups:
-        groups[neighbor] = folium.FeatureGroup(neighbor).add_to(map)
-
-    popup = folium.Popup(
-        f"""
-            <a href="{property["property_url"]}" target="_blank">{property["title"]}</a><br>
-            <br>
-            {property["description"]}<br>
-            <br>
-            """,
-        max_width=250,
-    )
-    
-    folium.Marker([property["latitude"], property["longitude"]], tooltip=property["title"]).add_to(groups[neighbor])
-
-folium.LayerControl().add_to(map)
-
-output = st_folium(map, width=700, height=500)
+output = st_folium(load_map(), width=700, height=500)
 
 clicked_property = output["last_object_clicked"]
 
