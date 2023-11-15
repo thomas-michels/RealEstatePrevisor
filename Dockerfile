@@ -13,8 +13,8 @@ COPY . .
 
 RUN pip install -r requirements.txt
 
-EXPOSE 80
+EXPOSE 8501
 
-HEALTHCHECK CMD curl --fail http://localhost:80/_stcore/health
+HEALTHCHECK CMD curl --fail http://localhost:8501/_stcore/health
 
-ENTRYPOINT ["streamlit", "run", "1_home.py", "--server.port=80", "--server.address=0.0.0.0"]
+ENTRYPOINT ["streamlit", "run", "1_home.py", "--server.port=8501", "--server.address", "0.0.0.0"]

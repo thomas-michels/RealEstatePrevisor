@@ -5,7 +5,7 @@ from app.models import SellingProperty, PredictedProperty
 
 _env = get_environment()
 
-def predict_property_price(property: SellingProperty) -> PredictedProperty:
+def predict_property_price(model_id: int, property: SellingProperty) -> PredictedProperty:
 
     try:
         url = f"{_env.PROPERTIES_API_URL}/properties/price/predict"
@@ -18,7 +18,9 @@ def predict_property_price(property: SellingProperty) -> PredictedProperty:
             "zip_code": property.cep,
         }
 
-        response = requests.post(url=url, json=body)
+        params = {"model_id": model_id}
+
+        response = requests.post(url=url, json=body, params=params)
 
         if response.status_code == 200:
             return PredictedProperty(**response.json())

@@ -42,16 +42,16 @@ def calculate_prices(properties: List[dict], predicted_price) -> Tuple[float, fl
             if property["price"] >= max_price:
                 max_price = property["price"]
 
-    print(min_price, max_price)
     return min_price, max_price
 
 with st.expander("Imovel"):
-    data = sp.pydantic_form(key="Imovel", model=SellingProperty, submit_label="Precificar", clear_on_submit=True)
+    model_id = st.number_input(label="ID do Modelo", min_value=0)
+    data = sp.pydantic_form(key="Imovel", model=SellingProperty, submit_label="Precificar", clear_on_submit=False)
 
 if data:
     with st.spinner("Precificando..."):
         try:
-            predicted_price = predict_property_price(property=data)
+            predicted_price = predict_property_price(model_id=model_id, property=data)
 
             if isinstance(predicted_price, str):
                 st.warning(predicted_price, icon="🚨")

@@ -1,4 +1,3 @@
-
 from pydantic import BaseSettings
 
 
@@ -9,9 +8,10 @@ class Environment(BaseSettings):
 
     # APPLICATION
     PROPERTIES_API_URL: str
+    GREY_WOLF_SERVICE_URL: str
 
     class Config:
         """Load config file"""
 
         env_file = ".env"
-        extra='ignore'
+        extra = "ignore"
