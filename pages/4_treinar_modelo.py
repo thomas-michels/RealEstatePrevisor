@@ -41,8 +41,13 @@ with st.expander(label="Parametro para treino"):
         in_training = train_model(name=name, gwo_params=gwo_params)
 
         if st.session_state.get("summarized_model") and not st.session_state.get("popup"):
-            st.session_state["popup"] = True
-            st.toast(body=f"Seu modelo está sendo treinado - #{st.session_state['summarized_model'].id}", icon="😎")
+            model = st.session_state['summarized_model']
+            if model.status == "TRAINING":
+                st.session_state["popup"] = True
+                st.toast(body=f"Seu modelo está sendo treinado - #{model.id}", icon="😎")
+
+            elif model.status == "SCHEDULED":
+                st.toast(body=f"O treinamento do seu modelo está agendado - #{model.id}", icon="⏲️")
 
     except Exception as error:
         print(f"Error on train model -> {str(error)}")
