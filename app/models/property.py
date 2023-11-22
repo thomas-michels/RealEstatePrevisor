@@ -21,4 +21,7 @@ class Property(BaseModel):
 class PredictedProperty(BaseModel):
     property: Property
     predicted_price: float = Field(example=123)
-    mse: float = Field(example=123)
+    mae: float = Field(example=123, alias="mse")
+
+    class Config:
+        allow_population_by_field_name = True

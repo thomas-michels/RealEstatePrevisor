@@ -10,6 +10,11 @@ def predict_property_price(model_id: int, property: SellingProperty) -> Predicte
     try:
         url = f"{_env.PROPERTIES_API_URL}/properties/price/predict"
 
+        if not property.cep.__contains__("-"):
+            zip_code = list(property.cep)
+            zip_code.insert(-3, "-")
+            property.cep = "".join(zip_code)
+
         body = {
             "rooms": property.quartos,
             "bathrooms": property.banheiros,
@@ -23,7 +28,12 @@ def predict_property_price(model_id: int, property: SellingProperty) -> Predicte
         response = requests.post(url=url, json=body, params=params)
 
         if response.status_code == 200:
-            return PredictedProperty(**response.json())
+            json = response.json()
+            return PredictedProperty(
+                predicted_price=json["predicted_price"],
+                mae=json["mse"],
+                property=json["property"],
+            )
         
         elif response.status_code == 404:
             return "Os dados fornecidos são inválidos!"

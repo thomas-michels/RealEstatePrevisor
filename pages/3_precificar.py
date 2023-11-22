@@ -69,7 +69,7 @@ if data:
                 )
 
                 min_price, max_price = calculate_prices(properties, predicted_price.predicted_price)
-                price_confidence = round(((predicted_price.predicted_price - predicted_price.mse) / predicted_price.predicted_price) * 100, 2)
+                price_confidence = round(((predicted_price.predicted_price - predicted_price.mae) / predicted_price.predicted_price) * 100, 2)
                 
                 col1, col2, col3 = st.columns(3)
                 col1.metric(label="Preço minimo", value=f"R$ {(min_price):,}")

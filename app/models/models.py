@@ -7,8 +7,11 @@ from enum import Enum
 class ModelHistory(BaseModel):
     model_id: int = Field(example=123)
     epoch: int = Field(example=123)
-    mse: float = Field(default=1, example=123)
+    mae: float = Field(default=1, example=123, alias="mse")
     params: dict = Field(default={})
+
+    class Config:
+        allow_population_by_field_name = True
 
 
 class ModelHistoryInDB(ModelHistory):
@@ -20,11 +23,14 @@ class ModelHistoryInDB(ModelHistory):
 class ModelWithHistory(BaseModel):
     id: int = Field(example=123)
     name: Optional[str] = Field(default="", example="test")
-    mse: float = Field(default=0, example=123)
+    mae: float = Field(default=0, example=123, alias="mse")
     gwo_params: Optional[dict] = Field(default={})
     created_at: datetime = Field(example=str(datetime.now()))
     updated_at: datetime = Field(example=str(datetime.now()))
     history: List[ModelHistoryInDB] = Field(default=[])
+
+    class Config:
+        allow_population_by_field_name = True
 
 
 class ModelStatus(str, Enum):

@@ -48,10 +48,9 @@ with st.expander(label="Parametro para treino"):
         print(f"Error on train model -> {str(error)}")
 
 col1, col2, col3 = st.columns(3)
-refresh = col2.button("Atualizar progresso")
+refresh = col1.button("Atualizar progresso")
 
 if st.session_state.get("summarized_model") and refresh:
-    
     try:
         in_training = st.session_state.get("summarized_model")
 
@@ -94,28 +93,43 @@ st.divider()
 
 st.write("# Modelos treinados")
 
+col1, col2, col3 = st.columns(3)
+
+page_size = col1.selectbox("Tamanho da página", options=(10, 25, 50))
+
 def get_data(page: int, page_size: int, refresh: bool=False):
     model_service = ModelService()
 
-    if "models" not in st.session_state or refresh:
-        st.session_state["models"] = model_service.get_models(page=page, page_size=page_size)
+    if "models" not in st.session_state or refresh or page_size:
+        models = model_service.get_models(page=page, page_size=page_size)
 
-    return st.session_state["models"]
+        if models:
+            filtered_models = []
+            for model in models:
+                if model.mae > 0:
+                    filtered_models.append(model)
+
+            st.session_state["models"] = filtered_models
+
+        return st.session_state["models"]
+
+    return []
 
 with elements("table"):
-    data = get_data(page=1, page_size=10, refresh=refresh)
-    with mui.TableHead(width="100%"):
-        mui.TableCell("ID", x=0, y=0, w=2, h=2, moved=False)
-        mui.TableCell("Nome", x=8, y=0, w=2, h=2, moved=False)
-        mui.TableCell("MSE", x=12, y=0, w=2, h=2, moved=False)
-        mui.TableCell("Grey Wolf Parametros", x=16, y=0, w=4, h=2, moved=False)
-        mui.TableCell("Treinado em", x=20, y=0, w=2, h=2, moved=False)
+    data = get_data(page=1, page_size=page_size, refresh=refresh)
+    if data:
+        with mui.TableHead(width="100%"):
+            mui.TableCell("ID", x=0, y=0, w=2, h=2, moved=False)
+            mui.TableCell("Nome", x=8, y=0, w=2, h=2, moved=False)
+            mui.TableCell("MAE", x=12, y=0, w=2, h=2, moved=False)
+            mui.TableCell("Grey Wolf Parametros", x=16, y=0, w=4, h=2, moved=False)
+            mui.TableCell("Treinado em", x=20, y=0, w=2, h=2, moved=False)
 
-    with mui.TableBody(width="100%"):
-        for i, model in enumerate(data, 1):
-            with mui.TableRow():
-                mui.TableCell(model.id, x=0, y=i*4, w=2, h=2, moved=False)
-                mui.TableCell(model.name, x=2, y=i*4, w=4, h=2, moved=False)
-                mui.TableCell(model.mse, x=4, y=i*4, w=2, h=2, moved=False)
-                mui.TableCell(str(model.gwo_params), x=6, y=i*4, w=4, h=2, moved=False)
-                mui.TableCell(model.updated_at.strftime("%d/%m/%Y"), x=8, y=i*4, w=2, h=2, moved=False)
+        with mui.TableBody(width="100%"):
+            for i, model in enumerate(data, 1):
+                with mui.TableRow():
+                    mui.TableCell(model.id, x=0, y=i*4, w=2, h=2, moved=False)
+                    mui.TableCell(model.name, x=2, y=i*4, w=4, h=2, moved=False)
+                    mui.TableCell(model.mae, x=4, y=i*4, w=2, h=2, moved=False)
+                    mui.TableCell(str(model.gwo_params), x=6, y=i*4, w=4, h=2, moved=False)
+                    mui.TableCell(model.updated_at.strftime("%d/%m/%Y"), x=8, y=i*4, w=2, h=2, moved=False)

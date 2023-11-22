@@ -1,10 +1,6 @@
 import streamlit as st
-from streamlit_elements import mui, elements
 from app.services import ModelService
 from app.models import ModelWithHistory
-from typing import List
-import seaborn as sns
-import matplotlib.pyplot as plt
 
 st.set_page_config(layout="wide")
 st.write("# Exibindo resultados de um modelo")
@@ -22,7 +18,7 @@ def get_data(page: int, page_size: int, refresh: bool=False):
 
     return data
 
-def get_x_y_from_data(selected_model: ModelWithHistory, x: str = "epoch", y: str = "mse"):
+def get_x_y_from_data(selected_model: ModelWithHistory, x: str = "epoch", y: str = "mae"):
     if x.__contains__("params."):
         new_x = x.replace("params.", "")
 
@@ -66,6 +62,7 @@ def get_x_y_from_data(selected_model: ModelWithHistory, x: str = "epoch", y: str
 def get_history_params(selected_model: ModelWithHistory):
     main_keys = list(selected_model.history[0].dict().keys())
     main_keys.remove("model_id")
+    main_keys.remove("id")
     main_keys.remove("created_at")
     main_keys.remove("updated_at")
     main_keys.remove("params")
@@ -92,7 +89,7 @@ selected_model = data[int(model_id)]
 st.write(f"## Modelo Selecionado - {selected_model.name}")
 
 col1, col2 = st.columns(2)
-col1.metric(label="MSE", value=selected_model.mse)
+col1.metric(label="MAE", value=selected_model.mae)
 
 coordinates, x, y = get_x_y_from_data(selected_model)
 st.line_chart(data=coordinates, x=x, y=y, use_container_width=True, width=1000, height=400)
