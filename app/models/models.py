@@ -1,5 +1,5 @@
 from typing import List, Optional
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, validator
 from datetime import datetime
 from enum import Enum
 
@@ -9,6 +9,10 @@ class ModelHistory(BaseModel):
     epoch: int = Field(example=123)
     mae: float = Field(default=1, example=123, alias="mse")
     params: dict = Field(default={})
+
+    @validator("mae", always=True, allow_reuse=True)
+    def validator_mae(cls, value: float):
+        return round(value, 5)
 
     class Config:
         allow_population_by_field_name = True
@@ -28,6 +32,10 @@ class ModelWithHistory(BaseModel):
     created_at: datetime = Field(example=str(datetime.now()))
     updated_at: datetime = Field(example=str(datetime.now()))
     history: List[ModelHistoryInDB] = Field(default=[])
+
+    @validator("mae", always=True, allow_reuse=True)
+    def validator_mae(cls, value: float):
+        return round(value, 5)
 
     class Config:
         allow_population_by_field_name = True

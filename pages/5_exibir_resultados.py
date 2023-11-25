@@ -75,32 +75,48 @@ def get_history_params(selected_model: ModelWithHistory):
     return (main_keys + new_param)
 
 with st.spinner("Carregando..."):
-    data = get_data(page=1, page_size=10)
+    data = get_data(page=1, page_size=1000)
 
-col1, col2, col3 = st.columns(3)
-option = col1.selectbox("Escolha um modelo treinado", (f"#{model.id} - {model.name}" for model in data.values()))
+col1, col2 = st.columns(2)
+option = col1.selectbox("Escolha um modelo treinado", (f"#{model.id} - {model.name} - MAE {model.mae}" for model in data.values()))
 
 st.divider()
 
 index = option.index(" -")
 model_id = "".join(list(option)[1:index])
 
-selected_model = data[int(model_id)]
-st.write(f"## Modelo Selecionado - {selected_model.name}")
+selected_model = data.get(int(model_id))
+if selected_model and selected_model.history:
+    model_services = ModelService()
+    best_params = model_services.get_best_parameters_on_model(selected_model)
 
-col1, col2 = st.columns(2)
-col1.metric(label="MAE", value=selected_model.mae)
+    st.write(f"### Modelo Selecionado - {selected_model.name}")
 
-coordinates, x, y = get_x_y_from_data(selected_model)
-st.line_chart(data=coordinates, x=x, y=y, use_container_width=True, width=1000, height=400)
+    st.write("#### Rede neural")
+    st.text("Melhores parametros escolhidos pelo GWO.\n")
+    col1, col2, col3, col4 = st.columns(4)
+    col1.metric(label="Máximo de iterações", value=best_params["params"]["max_iter"])
+    col2.metric(label="Tamanho dos pacotes", value=round(best_params["params"]["batch_size"], 3))
+    col3.metric(label="Momentum", value=round(best_params["params"]["momentum"], 3))
+    col4.metric(label="Taxa de aprendizado", value=round(best_params["params"]["learning_rate"], 3))
 
-params = get_history_params(selected_model)
+    col1, col2, col3 = st.columns(3)
+    hidden_layers = [str(hidden) for hidden in best_params["params"]["hidden_layer_sizes"]]
+    col1.metric(label="Camadas ocultas", value=len(hidden_layers))
+    col2.metric(label="MAE", value=selected_model.mae)
+    col3.metric(label="Neuronios por camada", value=" - ".join(hidden_layers))
 
-st.divider()
+    if selected_model.history:
+        coordinates, x, y = get_x_y_from_data(selected_model)
+        st.line_chart(data=coordinates, x=x, y=y, use_container_width=True, width=1000, height=400)
 
-col1, col2, col3 = st.columns(3)
-option = col1.multiselect("Escolha 2 colunas para gerar o grafico: ", params, max_selections=2)
+        params = get_history_params(selected_model)
 
-if len(option) == 2:
-    coordinates, x, y = get_x_y_from_data(selected_model, option[0], option[1])
-    st.line_chart(data=coordinates, x=x, y=y, use_container_width=True, width=1000, height=400)
+        st.divider()
+
+        col1, col2, col3 = st.columns(3)
+        option = col1.multiselect("Escolha 2 colunas para gerar o grafico: ", params, max_selections=2)
+
+        if len(option) == 2:
+            coordinates, x, y = get_x_y_from_data(selected_model, option[0], option[1])
+            st.line_chart(data=coordinates, x=x, y=y, use_container_width=True, width=1000, height=400)

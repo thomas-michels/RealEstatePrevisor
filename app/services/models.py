@@ -7,6 +7,36 @@ _env = get_environment()
 
 
 class ModelService:
+    def get_statistics(self) -> dict:
+        try:
+            url = f"{_env.GREY_WOLF_SERVICE_URL}/models/statistics"
+
+            response = requests.get(url=url)
+            print(f"Got statistics")
+
+            response.raise_for_status()
+
+            return response.json()
+
+        except Exception as error:
+            print(f"Error on get_statistics: {str(error)}")
+            return {}
+        
+    def delete_model_by_id(self, model_id: int) -> bool:
+        try:
+            url = f"{_env.GREY_WOLF_SERVICE_URL}/models/{model_id}"
+
+            response = requests.delete(url=url)
+            print(f"Model deleted")
+
+            response.raise_for_status()
+
+            return True
+
+        except Exception as error:
+            print(f"Error on delete_model_by_id: {str(error)}")
+            return False
+
     def get_models(self, page: int, page_size: int) -> List[ModelWithHistory]:
         try:
             print(f"Getting models")
@@ -63,3 +93,15 @@ class ModelService:
 
         except Exception as error:
             print(str(error))
+
+    def get_best_parameters_on_model(self, model_in_db: ModelWithHistory):
+        best_params = {}
+        best_mae = 1
+
+        for history in model_in_db.history:
+
+            if history.mae < best_mae:
+                best_params = history.dict()
+                best_mae = history.mae
+
+        return best_params

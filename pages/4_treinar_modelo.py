@@ -7,6 +7,21 @@ import datetime
 
 st.set_page_config(layout="wide")
 
+def search_statistics() -> dict:
+    model_services = ModelService()
+
+    if "statistics" not in st.session_state:
+        statistic = model_services.get_statistics()
+        x = list(statistic.keys())
+        y = list(statistic.values())
+        st.session_state["statistics"] = {"Status": x, "Quantidade": y}
+
+    return st.session_state["statistics"]
+
+def delete_model(model_id: int) -> bool:
+    model_services = ModelService()
+    return model_services.delete_model_by_id(model_id=model_id)
+
 def train_model(name: str, gwo_params: GWOParams) -> SummarizedModel:
     model_services = ModelService()
     
@@ -32,22 +47,30 @@ def search_model(model_id: int) -> SummarizedModel:
 
     return summarized_model
 
+st.write("# Fila de processamento dos modelos")
+statistic = search_statistics()
+
+st.bar_chart(data=statistic, x="Status", y="Quantidade", width=1000, height=400)
+
+st.divider()
+
 st.write("# Treinar novo modelo")
 with st.expander(label="Parametro para treino"):
     try:
         name = st.text_input(label="Nome do modelo")
         gwo_params = sp.pydantic_form(key="Parametros", model=GWOParams, submit_label="Treinar", clear_on_submit=False)
 
-        in_training = train_model(name=name, gwo_params=gwo_params)
+        if gwo_params:
+            in_training = train_model(name=name, gwo_params=gwo_params)
 
-        if st.session_state.get("summarized_model") and not st.session_state.get("popup"):
-            model = st.session_state['summarized_model']
-            if model.status == "TRAINING":
-                st.session_state["popup"] = True
-                st.toast(body=f"Seu modelo está sendo treinado - #{model.id}", icon="😎")
+            if st.session_state.get("summarized_model") and not st.session_state.get("popup"):
+                model = st.session_state['summarized_model']
+                if model.status == "TRAINING":
+                    st.session_state["popup"] = True
+                    st.toast(body=f"Seu modelo está sendo treinado - #{model.id}", icon="😎")
 
-            elif model.status == "SCHEDULED":
-                st.toast(body=f"O treinamento do seu modelo está agendado - #{model.id}", icon="⏲️")
+                elif model.status == "SCHEDULED":
+                    st.toast(body=f"O treinamento do seu modelo está agendado - #{model.id}", icon="⏲️")
 
     except Exception as error:
         print(f"Error on train model -> {str(error)}")
@@ -116,7 +139,7 @@ def get_data(page: int, page_size: int, refresh: bool=False):
 
             st.session_state["models"] = filtered_models
 
-        return st.session_state["models"]
+            return st.session_state["models"]
 
     return []
 
@@ -138,3 +161,19 @@ with elements("table"):
                     mui.TableCell(model.mae, x=4, y=i*4, w=2, h=2, moved=False)
                     mui.TableCell(str(model.gwo_params), x=6, y=i*4, w=4, h=2, moved=False)
                     mui.TableCell(model.updated_at.strftime("%d/%m/%Y"), x=8, y=i*4, w=2, h=2, moved=False)
+
+st.divider()
+
+col1, col2, col3 = st.columns(3)
+model_id = col1.number_input(label="Deseja deletar um modelo?", min_value=1, placeholder="ID do Modelo")
+
+btn_delete = st.button(label="Deletar")
+
+if btn_delete and model_id:
+    result = delete_model(model_id=model_id)
+
+    if result:
+        st.toast(f"Modelo #{model_id} deletado com sucesso!", icon="💣")
+
+    else:
+        st.toast(f"Modelo #{model_id} não encontrado!", icon="🙈")
