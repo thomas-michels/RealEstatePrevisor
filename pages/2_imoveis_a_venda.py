@@ -17,7 +17,7 @@ def get_data(
 
     property_search = PropertySearch()
 
-    st.session_state["data"] = property_search.find_similar_properties(
+    properties = property_search.find_similar_properties(
         page_size=page_size,
         offset=offset,
         rooms=rooms,
@@ -26,13 +26,19 @@ def get_data(
         size=size,
         zip_code=zip_code
     )
-    
-    all_properties = {}
 
-    for property in st.session_state["data"]:
-        all_properties[f'{float(property["latitude"])}-{float(property["longitude"])}'] = property
+    if not isinstance(properties, str):
+        st.session_state["data"] = properties
     
-    st.session_state["properties"] = all_properties
+        all_properties = {}
+
+        for property in st.session_state["data"]:
+            all_properties[f'{float(property["latitude"])}-{float(property["longitude"])}'] = property
+        
+        st.session_state["properties"] = all_properties
+
+    else:
+        st.toast(properties, icon="🚨")
 
 def apply_filter():
     get_data(
@@ -48,22 +54,16 @@ def load_map():
 
     groups = {}
 
-    properties = st.session_state["data"]
+    properties = st.session_state.get("data")
+
+    if not properties:
+        st.toast("Serviço indisponivel", icon="🚨")
+        return []
 
     for property in properties:
         neighbor = property["neighborhood_name"]
         if neighbor not in groups:
             groups[neighbor] = folium.FeatureGroup(neighbor).add_to(map)
-
-        popup = folium.Popup(
-            f"""
-                <a href="{property["property_url"]}" target="_blank">{property["title"]}</a><br>
-                <br>
-                {property["description"]}<br>
-                <br>
-                """,
-            max_width=250,
-        )
         
         folium.Marker([property["latitude"], property["longitude"]], tooltip=property["title"]).add_to(groups[neighbor])
 
@@ -83,22 +83,25 @@ with st.expander(label="Filtros") as filter:
 
 btn_search = st.button(label="Filtrar", on_click=apply_filter)
 
-output = st_folium(load_map(), width=700, height=500)
+loaded_map = load_map()
 
-clicked_property = output["last_object_clicked"]
+if loaded_map:
+    output = st_folium(loaded_map, width=700, height=500)
 
-if clicked_property:
-    cached_property = st.session_state["properties"].get(f'{float(clicked_property["lat"])}-{str(clicked_property["lng"])}')
-    if cached_property:
-        st.write(f"## _{cached_property['title'].upper()}_")
-        st.image(cached_property["image_url"])
-        st.write(f"#### __{cached_property['type'].upper()} - {cached_property['modality_name'].upper()}__")
-        st.metric(label="Preço", value=f"R$ {cached_property['price']:,}")
+    clicked_property = output["last_object_clicked"]
 
-        col1, col2, col3, col4 = st.columns(4)
+    if clicked_property:
+        cached_property = st.session_state["properties"].get(f'{float(clicked_property["lat"])}-{str(clicked_property["lng"])}')
+        if cached_property:
+            st.write(f"## _{cached_property['title'].upper()}_")
+            st.image(cached_property["image_url"], width=700)
+            st.write(f"#### __{cached_property['type'].upper()} - {cached_property['modality_name'].upper()}__")
+            st.metric(label="Preço", value=f"R$ {cached_property['price']:,}")
 
-        col1.metric(label="Quartos", value=cached_property["rooms"])
-        col2.metric(label="Banheiros", value=cached_property["bathrooms"])
-        col3.metric(label="Garagens", value=cached_property["parking_space"])
-        col4.metric(label="Tamanho em m²", value=cached_property["size"])
-        st.write(f"Mais detalhes no [link]({cached_property['property_url']}).")
+            col1, col2, col3, col4 = st.columns(4)
+
+            col1.metric(label="Quartos", value=cached_property["rooms"])
+            col2.metric(label="Banheiros", value=cached_property["bathrooms"])
+            col3.metric(label="Garagens", value=cached_property["parking_space"])
+            col4.metric(label="Tamanho em m²", value=cached_property["size"])
+            st.write(f"Mais detalhes no [link]({cached_property['property_url']}).")

@@ -1,4 +1,5 @@
 import requests
+from requests.exceptions import ConnectionError
 from app.configs import get_environment
 
 _env = get_environment()
@@ -32,8 +33,11 @@ class PropertySearch:
 
         if zip_code:
             params["zip_code"] = zip_code
+        try:
+            response = requests.get(url=url, params=params)
 
-        response = requests.get(url=url, params=params)
+        except ConnectionError:
+            return "Serviço indisponivel!"
 
         if response.status_code == 404:
             return "Nenhuma propriedade encontrada, tente outros filtros!"
