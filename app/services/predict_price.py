@@ -8,7 +8,7 @@ _env = get_environment()
 def predict_property_price(model_id: int, property: SellingProperty) -> PredictedProperty:
 
     try:
-        url = f"{_env.PROPERTIES_API_URL}/properties/price/predict"
+        url = f"{_env.GET_IMOVEIS_API_URL}/properties/price/predict"
 
         if not property.cep.__contains__("-"):
             zip_code = list(property.cep)

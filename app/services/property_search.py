@@ -16,7 +16,7 @@ class PropertySearch:
         size: int=0,
         zip_code: str=""
     ):
-        url = f"{_env.PROPERTIES_API_URL}/properties"
+        url = f"{_env.GET_IMOVEIS_API_URL}/properties"
         params = {"page_size": page_size, "offset": offset}
 
         if rooms:

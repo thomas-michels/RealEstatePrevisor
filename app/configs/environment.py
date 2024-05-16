@@ -7,8 +7,8 @@ class Environment(BaseSettings):
     """
 
     # APPLICATION
-    PROPERTIES_API_URL: str
-    GREY_WOLF_SERVICE_URL: str
+    GET_IMOVEIS_API_URL: str
+    GET_IMOVEIS_API_URL: str
 
     class Config:
         """Load config file"""
