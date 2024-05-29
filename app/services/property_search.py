@@ -1,10 +1,11 @@
 import requests
 from requests.exceptions import ConnectionError
 from app.configs import get_environment
+from .base_request_service import BaseRequestService
 
 _env = get_environment()
 
-class PropertySearch:
+class PropertySearch(BaseRequestService):
 
     def find_similar_properties(
         self,
@@ -34,7 +35,7 @@ class PropertySearch:
         if zip_code:
             params["zip_code"] = zip_code
         try:
-            response = requests.get(url=url, params=params)
+            response = requests.get(url=url, params=params, headers=self.get_headers())
 
         except ConnectionError:
             return "Serviço indisponivel!"

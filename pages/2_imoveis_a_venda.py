@@ -2,9 +2,12 @@ import folium
 import streamlit as st
 from streamlit_folium import st_folium
 from app.services import PropertySearch
+from app.components.sidebar import get_side_bar
 
 
 st.set_page_config(layout="wide")
+
+get_side_bar()
 
 def get_data(
         page_size: int=500,
@@ -15,7 +18,7 @@ def get_data(
         size: int=0,
         zip_code: str=""):
 
-    property_search = PropertySearch()
+    property_search = PropertySearch(token=st.session_state.get("token"))
 
     properties = property_search.find_similar_properties(
         page_size=page_size,
