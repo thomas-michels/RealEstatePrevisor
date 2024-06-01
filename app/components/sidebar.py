@@ -5,7 +5,7 @@ from app.components.logged_state import get_logged
 from app.services.user import UserService
 
 
-def get_side_bar():
+def get_side_bar(current_path: str):
 
     user_service = UserService(token="")
 
@@ -20,7 +20,8 @@ def get_side_bar():
             show_pages(
                 [
                     Page("1_home.py", "Home", "🏠"),
-                    Page("pages/2_imoveis_a_venda.py", "Imóveis a Venda", "🪧"),
+                    Page("pages/6_listagem_de_imoveis.py", "Busca de Imóveis", "🔍"),
+                    Page("pages/2_mapa_de_imoveis.py", "Mapa de Imóveis", "🗺️"),
                 ]
             )
 
@@ -33,35 +34,40 @@ def get_side_bar():
             )
 
         else:
-            data = get_login_form()
+            if current_path != "home":
+                st.switch_page("1_home.py")
 
-            show_pages(
-                [
-                    Page("1_home.py", "Home", "🏠"),
-                ]
-            )
+            else:
 
-            hide_pages(
-                [
-                    Page("pages/2_imoveis_a_venda.py", "Imóveis a Venda", "🪧"),
-                    Page("pages/3_precificar.py", "Precificação", "🪧"),
-                    Page("pages/4_treinar_modelo.py", "Treinamento de Modelos de IA", "🪧"),
-                    Page("pages/5_exibir_resultados.py", "Resultados", "🪧"),
-                ]
-            )
+                data = get_login_form()
 
+                show_pages(
+                    [
+                        Page("1_home.py", "Home", "🏠"),
+                    ]
+                )
 
-            if data:
-                success, token = user_service.login(data=data)
+                hide_pages(
+                    [
+                        Page("pages/6_listagem_de_imoveis.py", "Busca de Imóveis", "🔍"),
+                        Page("pages/2_mapa_de_imoveis.py", "Mapa de Imóveis", "🗺️"),
+                        Page("pages/3_precificar.py", "Precificação", "🪧"),
+                        Page("pages/4_treinar_modelo.py", "Treinamento de Modelos de IA", "🪧"),
+                        Page("pages/5_exibir_resultados.py", "Resultados", "🪧"),
+                    ]
+                )
 
-                if success:
-                    user_service.set_token(new_token=token)
-                    success, current_user = user_service.me()
+                if data:
+                    success, token = user_service.login(data=data)
 
                     if success:
-                        st.session_state["token"] = token
-                        st.session_state["current_user"] = current_user
-                        st.rerun()
+                        user_service.set_token(new_token=token)
+                        success, current_user = user_service.me()
 
-                else:
-                    st.toast(body=token, icon="🚨")
+                        if success:
+                            st.session_state["token"] = token
+                            st.session_state["current_user"] = current_user
+                            st.rerun()
+
+                    else:
+                        st.toast(body=token, icon="🚨")

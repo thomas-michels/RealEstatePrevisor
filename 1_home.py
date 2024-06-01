@@ -8,7 +8,7 @@ st.set_page_config(
     initial_sidebar_state="expanded"
 )
 
-get_side_bar()
+get_side_bar(current_path="home")
 
 st.write("# Bem vindo a Get Imóveis")
 

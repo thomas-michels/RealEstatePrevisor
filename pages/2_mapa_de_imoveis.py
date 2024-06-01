@@ -7,7 +7,7 @@ from app.components.sidebar import get_side_bar
 
 st.set_page_config(layout="wide")
 
-get_side_bar()
+get_side_bar(current_path="mapa de imoveis")
 
 def get_data(
         page_size: int=500,
@@ -53,7 +53,10 @@ def apply_filter():
     )
 
 def load_map():
-    map = folium.Map(location=[-26.878599, -49.079493], zoom_start=12)
+    map = folium.Map(
+        location=[-26.878599, -49.079493],
+        zoom_start=12
+    )
 
     groups = {}
 
@@ -89,7 +92,7 @@ btn_search = st.button(label="Filtrar", on_click=apply_filter)
 loaded_map = load_map()
 
 if loaded_map:
-    output = st_folium(loaded_map, width=700, height=500)
+    output = st_folium(loaded_map, height=700, width=800)
 
     clicked_property = output["last_object_clicked"]
 

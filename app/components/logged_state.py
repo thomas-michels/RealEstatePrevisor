@@ -2,6 +2,7 @@ import streamlit as st
 from app.components.update_user import update_user_form
 from app.models.user import User
 
+
 def reset_current_user():
     if st.session_state.get("current_user"):
         st.session_state.pop("current_user")
